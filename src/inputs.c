@@ -19,6 +19,22 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef _WIN32
+
+/*
+ * Windows doesn't have S_ISFIFO (no FIFOs) and uses _S_IFREG
+ */
+#ifndef S_ISFIFO
+#define S_ISFIFO(m) 0
+#endif
+
+#ifndef S_ISREG
+#define S_ISREG(m) (((m) & _S_IFMT) == _S_IFREG)
+#endif
+
+#endif
+
 #include <termios.h>
 #include <unistd.h>
 
@@ -331,9 +347,31 @@ repeat:
 			if (first_event)
 			{
 				first_event = false;
+
+#ifdef PDCURSES
+				/*
+				 * On PDCurses/Windows, use short timeout to detect Alt sequences.
+				 * 100ms timeout allows detection of Alt+key combinations.
+				 */
+				timeout(100);
+#endif
 				goto repeat;
 			}
+#ifdef PDCURSES
+			else
+			{
+				/* Second iteration - restore no timeout mode */
+				timeout(-1);
+			}
+#endif
 		}
+#ifdef PDCURSES
+		else if (!first_event)
+		{
+			/* If we got here on second iteration, restore no timeout */
+			timeout(-1);
+		}
+#endif
 	}
 
 #if PDCURSES
@@ -1126,7 +1164,7 @@ bool
 open_tty_stream(void)
 {
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(_WIN32)
 
 	f_tty = fopen("/dev/tty", "r+");
 
@@ -1134,6 +1172,15 @@ open_tty_stream(void)
 
 	if (!f_tty)
 	{
+#ifdef _WIN32
+		/*
+		 * Windows console access via CONIN$ (Console Input device).
+		 * This is the Windows equivalent of /dev/tty for reading.
+		 */
+		f_tty = fopen("CONIN$", "r+");
+		if (f_tty)
+			close_f_tty = true;
+#else
 		f_tty = fopen(ttyname(fileno(stdout)), "r");
 		if (!f_tty)
 		{
@@ -1142,6 +1189,7 @@ open_tty_stream(void)
 		}
 		else
 			close_f_tty = true;
+#endif
 	}
 	else
 		close_f_tty = true;

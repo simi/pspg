@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "pspg",
+  "version": "5.8.12",
+  "description": "PostgreSQL pager for Windows",
+  "homepage": "https://github.com/okbob/pspg",
+  "dependencies": [
+    "pdcurses",
+    "getopt",
+    "libpq"
+  ],
+  "builtin-baseline": "edffab1bcd2cb5b8c17d6ba34d5651ea0bf82979"
+}

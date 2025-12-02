@@ -16,6 +16,7 @@
 #include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <errno.h>
 #include <ctype.h>
 
@@ -436,7 +437,7 @@ theme_loader(FILE *theme,
 
 	errno = 0;
 
-	while ((read = getline(&line, &len, theme)) != -1)
+	while ((read = platform_getline(&line, &len, theme)) != -1)
 	{
 		Tokenizer tokenizer;
 		Token token, *_token;

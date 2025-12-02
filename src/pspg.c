@@ -51,9 +51,7 @@
 #endif
 
 #ifdef PDCURSES
-
 #include <term.h>
-
 #endif
 
 #include <time.h>
@@ -1854,7 +1852,7 @@ check_clipboard_app(Options *opts, bool *force_refresh)
 		f = popen("wl-copy -v 2>/dev/null", "r");
 		if (f)
 		{
-			retval = getline(&line, &size, f);
+			retval = platform_getline(&line, &size, f);
 			if (retval >= 0 && line)
 			{
 				if (strncmp(line, "wl-clipboard", 12) == 0)
@@ -1892,7 +1890,7 @@ check_clipboard_app(Options *opts, bool *force_refresh)
 		f = popen("xclip -version 2>&1", "r");
 		if (f)
 		{
-			retval = getline(&line, &size, f);
+			retval = platform_getline(&line, &size, f);
 			if (retval >= 0 && line)
 			{
 				if (strncmp(line, "xclip", 5) == 0)
@@ -3038,10 +3036,18 @@ main(int argc, char *argv[])
 	 * ncurses doesn't work well when direct and not direct colors are used
 	 * together.
 	 */
+#ifdef PDCURSES
+	/*
+	 * PDCurses doesn't support newterm() properly, use initscr() instead.
+	 * PDCurses uses a simpler initialization model with the Windows console.
+	 */
+	term = initscr();
+#else
 	if (opts.direct_color)
 		term = newterm("xterm-direct", stdout, f_tty);
 	else
 		term = newterm(termname(), stdout, f_tty);
+#endif
 
 	if (!term)
 		leave("cannot to initialize new terminal");

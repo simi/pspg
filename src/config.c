@@ -266,7 +266,7 @@ load_config(char *path, Options *opts)
 	if (f == NULL)
 		return false;
 
-	while ((read = getline(&line, &len, f)) != -1)
+	while ((read = platform_getline(&line, &len, f)) != -1)
 	{
 		char	key[100];
 		bool	bool_val = false;
